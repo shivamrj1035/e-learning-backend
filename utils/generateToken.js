@@ -5,7 +5,7 @@ export const generateToken = async ( res, user, message) =>{
 
     return res
     .status(200)
-    .cookie("access_token", token, {
+    .cookie("app_token", token, {
         httpOnly : true,
         sameSite : "strict",
         maxAge : 24 * 60 * 60 * 1000 // 1 day
