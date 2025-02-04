@@ -23,7 +23,7 @@ const Schema = new mongoose.Schema({
         type: Number,
         // required: true,
     },
-    thumbnail: {
+    thumbnail : {
         type: String,
     },
     enrolledCourses: [
