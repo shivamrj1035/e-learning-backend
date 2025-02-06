@@ -42,7 +42,7 @@ const Schema = new mongoose.Schema({
             ref: "Lecture",
         }
     ],
-    isPublic: {
+    isPublished: {
         type: Boolean,
         default: false,
     },
