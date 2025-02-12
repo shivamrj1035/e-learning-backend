@@ -26,10 +26,10 @@ const Schema = new mongoose.Schema({
     thumbnail : {
         type: String,
     },
-    enrolledCourses: [
+    enrolledStudents:[
         {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            type:mongoose.Schema.Types.ObjectId,
+            ref:'User'
         }
     ],
     creator: {
