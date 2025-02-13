@@ -47,7 +47,7 @@ export const createCheckoutSession = async (req, res) => {
         allowed_countries: ["IN"], // Optionally restrict allowed countries
       },
     });
-
+    
     if (!session.url) {
       return res
         .status(400)
@@ -144,7 +144,7 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
 
     const course = await Course.findById(courseId).populate({ path: "creator" }).populate({ path: "lectures" })
 
-    const purchased = await CoursePurchase.findOne({ userId, courseId });
+    const purchased = await CoursePurchase.findOne({ userId, courseId, status : "completed" });
 
     if (!course) {
       return res.status(404).json({ message: "Course not found" });

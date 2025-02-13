@@ -84,16 +84,16 @@ export const getCourseById = async (req, res) => {
     }
 }
 
-export const removeCourse = async (req,res) => {
+export const removeCourse = async (req, res) => {
     try {
-        const {courseId} = req.params;
+        const { courseId } = req.params;
         const course = await Course.findByIdAndDelete(courseId);
-        if(!course){
+        if (!course) {
             return res.status(404).json({
-                message:"Course not found!"
+                message: "Course not found!"
             });
         }
-        
+
         // Delete all lectures related to this course
         await Lecture.deleteMany({ _id: { $in: course.lectures } });
 
@@ -101,12 +101,12 @@ export const removeCourse = async (req,res) => {
         await Course.findByIdAndDelete(courseId);
 
         return res.status(200).json({
-            message:"Course removed successfully."
+            message: "Course removed successfully."
         })
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            message:"Failed to remove course"
+            message: "Failed to remove course"
         })
     }
 }
@@ -142,12 +142,12 @@ export const getCourseLecture = async (req, res) => {
     try {
 
         const { courseId } = req.params;
-        
+
         const course = await Course.findById(courseId).populate({
             path: "lectures",
             model: "Lecture", // Ensure this matches your Lecture model name
         });
-        
+
         if (!course) {
             return res.status(404).json({ message: 'Failed to fetch course for the lectures' });
         }
@@ -156,86 +156,86 @@ export const getCourseLecture = async (req, res) => {
             { lectures: course.lectures, message: 'Lecture retrived Successfully' }
         );
     } catch (err) {
-        return res.status(500).json({ message: 'Failed to get lectures', error : err });
+        return res.status(500).json({ message: 'Failed to get lectures', error: err });
     }
 }
 
-export const editLecture = async (req,res) => {
+export const editLecture = async (req, res) => {
     try {
-        const {lectureTitle, videoInfo, isPreviewFree} = req.body;
-        
-        const {courseId, lectureId} = req.params;
+        const { lectureTitle, videoInfo, isPreviewFree } = req.body;
+
+        const { courseId, lectureId } = req.params;
         const lecture = await Lecture.findById(lectureId);
-        if(!lecture){
+        if (!lecture) {
             return res.status(404).json({
-                message:"Lecture not found!"
+                message: "Lecture not found!"
             })
         }
-        if(lecture.publicId) deleteVideo(lecture.publicId)
+        if (lecture.publicId) deleteVideo(lecture.publicId)
         // update lecture
-        if(lectureTitle) lecture.lectureTitle = lectureTitle;
-        if(videoInfo?.videoUrl) lecture.videoUrl = videoInfo.videoUrl;
-        if(videoInfo?.publicId) lecture.publicId = videoInfo.publicId;
+        if (lectureTitle) lecture.lectureTitle = lectureTitle;
+        if (videoInfo?.videoUrl) lecture.videoUrl = videoInfo.videoUrl;
+        if (videoInfo?.publicId) lecture.publicId = videoInfo.publicId;
         lecture.isPreviewFree = isPreviewFree;
 
         await lecture.save();
 
         // If  the course still has the lecture id if it was not aleardy added;
         const course = await Course.findById(courseId);
-        if(course && !course.lectures.includes(lecture._id)){
+        if (course && !course.lectures.includes(lecture._id)) {
             course.lectures.push(lecture._id);
             await course.save();
         };
         return res.status(200).json({
             lecture,
-            message:"Lecture updated successfully."
+            message: "Lecture updated successfully."
         })
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            message:"Failed to edit lectures"
+            message: "Failed to edit lectures"
         })
     }
 }
 
-export const removeLecture = async (req,res) => {
+export const removeLecture = async (req, res) => {
     try {
-        const {lectureId} = req.params;
+        const { lectureId } = req.params;
         const lecture = await Lecture.findByIdAndDelete(lectureId);
-        if(!lecture){
+        if (!lecture) {
             return res.status(404).json({
-                message:"Lecture not found!"
+                message: "Lecture not found!"
             });
         }
         // delete the lecture from couldinary as well
-        if(lecture.publicId){
+        if (lecture.publicId) {
             await deleteVideo(lecture.publicId);
         }
 
         // Remove the lecture reference from the associated course
         await Course.updateOne(
-            {lectures:lectureId}, // find the course that contains the lecture
-            {$pull:{lectures:lectureId}} // Remove the lectures id from the lectures array
+            { lectures: lectureId }, // find the course that contains the lecture
+            { $pull: { lectures: lectureId } } // Remove the lectures id from the lectures array
         );
 
         return res.status(200).json({
-            message:"Lecture removed successfully."
+            message: "Lecture removed successfully."
         })
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            message:"Failed to remove lecture"
+            message: "Failed to remove lecture"
         })
     }
 }
 
-export const getLectureById = async (req,res) => {
+export const getLectureById = async (req, res) => {
     try {
-        const {lectureId} = req.params;
+        const { lectureId } = req.params;
         const lecture = await Lecture.findById(lectureId);
-        if(!lecture){
+        if (!lecture) {
             return res.status(404).json({
-                message:"Lecture not found!"
+                message: "Lecture not found!"
             });
         }
         return res.status(200).json({
@@ -244,50 +244,50 @@ export const getLectureById = async (req,res) => {
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            message:"Failed to get lecture by id"
+            message: "Failed to get lecture by id"
         })
     }
 }
 
-export const togglePublishCourse = async (req,res) => {
+export const togglePublishCourse = async (req, res) => {
     try {
-        const {courseId} = req.params;
-        const {publish} = req.query; // true, false
+        const { courseId } = req.params;
+        const { publish } = req.query; // true, false
         const course = await Course.findById(courseId);
-        if(!course){
+        if (!course) {
             return res.status(404).json({
-                message:"Course not found!"
+                message: "Course not found!"
             });
         }
         // publish status based on the query paramter
         course.isPublished = publish === "true";
-        console.log( publish === "true")
+        console.log(publish === "true")
         await course.save();
-        
+
         const statusMessage = course.isPublished ? "Published" : "Unpublished";
         return res.status(200).json({
-            message:`Course is ${statusMessage}`
+            message: `Course is ${statusMessage}`
         });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            message:"Failed to update status"
+            message: "Failed to update status"
         })
     }
 }
 
 
-export const getPublishedCourses = async(req,res) => {
+export const getPublishedCourses = async (req, res) => {
     try {
-        
-        const courses =await Course.find({isPublished : true}).populate({
-            path : 'creator',
-            select : 'name photoUrl'
+
+        const courses = await Course.find({ isPublished: true }).populate({
+            path: 'creator',
+            select: 'name photoUrl'
         });
-        
-        if(!courses){
+
+        if (!courses) {
             return res.status(404).json({
-                message:"Courses not found!"
+                message: "Courses not found!"
             });
         }
         return res.status(200).json({
@@ -296,7 +296,42 @@ export const getPublishedCourses = async(req,res) => {
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            message:"Failed to fetch published courses"
+            message: "Failed to fetch published courses"
         })
+    }
+}
+
+export const searchCourse = async (req, res) => {
+    try {
+        const { query = "", sortByPrice = "", categories = [] } = req.query;
+        const categoryArray = Array.isArray(categories) ? categories : categories.split(",");
+
+        // create search qury
+        const searchCriteria = {
+            isPublished: true,
+            $or: [
+                { courseTitle: { $regex: query, $options: "i" } },
+                { subTitle: { $regex: query, $options: "i" } },
+                { category: { $regex: query, $options: "i" } }
+            ],
+        }
+        if (categoryArray.length > 0 && categoryArray[0] !== "") {
+            searchCriteria.category = { $in: categoryArray };
+        }
+
+        const sortOptions = {};
+        if (sortByPrice === "low") {
+            sortOptions.coursePrice = 1; // for ascending order
+        } else if (sortByPrice === "high") {
+            sortOptions.coursePrice = -1; // for descending order
+        }
+
+        let courses = await Course.find(searchCriteria).populate({ path: "creator", select: "name photoUrl" }).sort(sortOptions);
+        return res.status(200).json({
+            courses: courses || [],
+            success: true
+        });
+    } catch (error) {
+        console.log(error)
     }
 }
